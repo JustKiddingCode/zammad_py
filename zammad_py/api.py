@@ -1,5 +1,6 @@
 """Main module."""
 import atexit
+import functools
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from typing import Any, Generator, List, Optional, Tuple
@@ -22,6 +23,7 @@ class ZammadAPI:
         oauth2_token: Optional[str] = None,
         on_behalf_of: Optional[str] = None,
         additional_headers: Optional[List[Tuple[str, str]]] = None,
+        timeout: Optional[int] = None,
     ) -> None:
         self.url = url if url.endswith("/") else f"{url}/"
         self._username = username
@@ -50,6 +52,9 @@ class ZammadAPI:
         if self._additional_headers:
             for additional_header in self._additional_headers:
                 self.session.headers[additional_header[0]] = additional_header[1]
+
+        # Shim timeout into request method of session
+        self.session.request = functools.partial(self.session.request, timeout=timeout)
 
     def _check_config(self) -> None:
         """Check the configuration"""
